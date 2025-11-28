@@ -1,3 +1,15 @@
+gpu_info = !nvidia-smi
+gpu_info = '\n'.join(gpu_info)
+if gpu_info.find('failed') >= 0:
+  print('Not connected to a GPU')
+else:
+  print(gpu_info)
+
+torch.cuda.empty_cache()
+
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+print(device)
+
 CIFAR dataset-done
 MNIST dataset-done
 PASCAL VOC DATASET:
