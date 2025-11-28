@@ -37,3 +37,90 @@ def setup_device_and_seeds():
         torch.cuda.manual_seed_all(seed)
 
     return device
+======================================================================================
+!nvidia-smi
+def setup_device_and_seeds():
+    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+    if device.type == 'cuda':
+        print(f"GPU Name: {torch.cuda.get_device_name(0)}")
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    seed = 42
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+    # For CUDA reproducibility
+    if device.type == 'cuda':
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+    return device
+======================================================================================
+BETTER
+
+"""
+GPU Setup and Reproducibility Configuration
+"""
+
+# ============================================================================
+# DEVICE SETUP FUNCTION
+# ============================================================================
+
+def setup_device_and_seeds(gpu_id=2, seed=42):
+    """
+    Configure GPU device and set random seeds for reproducibility.
+    
+    Args:
+        gpu_id (int): GPU index to use (default: 2)
+        seed (int): Random seed for reproducibility (default: 42)
+    
+    Returns:
+        torch.device: Configured device (cuda or cpu)
+    """
+    # Device selection
+    device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+    print(f"\n{'='*70}")
+    print(f"DEVICE CONFIGURATION")
+    print(f"{'='*70}")
+    print(f"Device: {device}")
+    
+    # GPU information
+    if device.type == 'cuda':
+        print(f"GPU Name: {torch.cuda.get_device_name(gpu_id)}")
+        print(f"CUDA Version: {torch.version.cuda}")
+        print(f"Total VRAM: {torch.cuda.get_device_properties(gpu_id).total_memory / 1024**3:.2f} GB")
+        
+        # Reproducibility settings
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        
+        # Performance optimizations
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.cuda.empty_cache()
+        
+        print("GPU optimizations enabled (TF32, deterministic mode)")
+    else:
+        print("Running on CPU (training will be slower)")
+    
+    # Random seed configuration
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    if device.type == 'cuda':
+        torch.cuda.manual_seed_all(seed)
+    
+    print(f"Random seeds set (seed={seed})")
+    print(f"{'='*70}\n")
+    
+    return device
+
+# ============================================================================
+# INITIALIZE DEVICE
+# ============================================================================
+
+DEVICE = setup_device_and_seeds(gpu_id=2, seed=SEED)
+os.environ['TQDM_DISABLE'] = '1'  # Reduce disk I/O on server
